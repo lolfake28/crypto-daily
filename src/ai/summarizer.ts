@@ -46,6 +46,15 @@ Respond in this exact structure:
 • *COIN* — [1-line reason]
 • *COIN* — [1-line reason]
 
+*🆕 New Launches & Listings*
+• *COIN* — [1-line: what it is + why it matters, or "nothing notable today" if none]
+• *COIN* — [1-line]
+
+*💎 Hidden Gems (Mid-Cap Movers, rank #11–100)*
+• *COIN* (#rank) — [direction: 🟢 UP / 🔴 DOWN] [1-line reason based on price action or news]
+• *COIN* (#rank) — [direction] [1-line reason]
+• *COIN* (#rank) — [direction] [1-line reason]
+
 *📈 Top 5 Predictions*
 🟢 *BULLISH — COIN* | Confidence: High/Medium/Low
 [1 sentence reason]
@@ -59,14 +68,15 @@ _Disclaimer: Not financial advice. Always do your own research._
 
 Keep the tone professional but easy to understand. Do not use excessive jargon.
 Always respond in English regardless of the language of the input data.
-Total response must be under 800 words.`;
+Total response must be under 1000 words.`;
 
 export async function generateDailySummary(
   news: string,
   sentiment: string,
   date: string,
   xTrends?: string,
-  marketData?: string
+  marketData?: string,
+  midCapData?: string
 ): Promise<string> {
   const xSection = xTrends
     ? `\n--- X (TWITTER) TRENDING TWEETS ---\n${xTrends}\n`
@@ -76,19 +86,23 @@ export async function generateDailySummary(
     ? `\n--- LIVE MARKET DATA (price, 24h/7d change, volume, ATH diff) ---\n${marketData}\n`
     : "";
 
+  const midCapSection = midCapData
+    ? `\n--- MID-CAP MOVERS (rank #11–100, sorted by biggest 24h move) ---\n${midCapData}\n`
+    : "";
+
   const userPrompt = `Here is today's crypto data. Date: ${date}
 
 --- NEWS HEADLINES ---
 ${news}
-${xSection}${marketSection}
+${xSection}${marketSection}${midCapSection}
 --- SOCIAL SENTIMENT DATA (LunarCrush) ---
 ${sentiment}
 
-Please generate today's daily crypto digest including the Top 5 Bullish/Bearish predictions based on all the data above.`;
+Please generate today's daily crypto digest. Use the mid-cap movers data for the Hidden Gems section and the news headlines for the New Launches & Listings section. Include the Top 5 Bullish/Bearish predictions based on all data above.`;
 
   const response = await getClient().messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1200,
+    max_tokens: 1600,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
   });

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { fetchCryptoNews } from "./fetchers/cryptopanic";
 import { fetchSocialSentiment } from "./fetchers/lunarcrush";
 import { fetchXSentiment } from "./fetchers/apify";
-import { fetchMarketData } from "./fetchers/coingecko";
+import { fetchMarketData, fetchMidCapData } from "./fetchers/coingecko";
 import { generateDailySummary } from "./ai/summarizer";
 import { sendToTelegram } from "./bot/telegram";
 import { startCommandListener } from "./bot/listener";
@@ -22,11 +22,12 @@ async function runDailyDigest(chatId?: number): Promise<void> {
 
   try {
     console.log("📡 Fetching news, sentiment, X trends, and market data...");
-    const [news, sentiment, xTrends, marketData] = await Promise.all([
+    const [news, sentiment, xTrends, marketData, midCapData] = await Promise.all([
       fetchCryptoNews(),
       fetchSocialSentiment(TRACKED_COINS),
       fetchXSentiment(TRACKED_COINS),
       fetchMarketData(TRACKED_COINS),
+      fetchMidCapData(),
     ]);
 
     const date = new Date().toLocaleDateString("en-US", {
@@ -37,7 +38,7 @@ async function runDailyDigest(chatId?: number): Promise<void> {
     });
 
     console.log("🤖 Generating summary with Claude...");
-    const summary = await generateDailySummary(news, sentiment, date, xTrends, marketData);
+    const summary = await generateDailySummary(news, sentiment, date, xTrends, marketData, midCapData);
 
     console.log("📨 Sending to Telegram...");
     await sendToTelegram(summary, chatId);

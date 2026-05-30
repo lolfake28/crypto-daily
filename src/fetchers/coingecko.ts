@@ -34,6 +34,7 @@ interface CoinMarket {
   market_cap_rank: number;
   ath: number;
   ath_change_percentage: number;
+  fully_diluted_valuation: number | null;
 }
 
 function fmt(n: number): string {
@@ -90,5 +91,64 @@ export async function fetchMarketData(coins: string[]): Promise<string> {
   } catch (err) {
     console.warn("⚠️  CoinGecko fetch failed:", (err as Error).message);
     return "Market data unavailable (CoinGecko error)";
+  }
+}
+
+export async function fetchMidCapData(): Promise<string> {
+  try {
+    // Fetch coins ranked 11–100, sorted by market cap
+    const [page1, page2] = await Promise.all([
+      axios.get<CoinMarket[]>(`${COINGECKO_BASE}/coins/markets`, {
+        params: {
+          vs_currency: "usd",
+          order: "market_cap_desc",
+          per_page: 50,
+          page: 1,
+          price_change_percentage: "7d",
+          sparkline: false,
+        },
+        timeout: 12000,
+      }),
+      axios.get<CoinMarket[]>(`${COINGECKO_BASE}/coins/markets`, {
+        params: {
+          vs_currency: "usd",
+          order: "market_cap_desc",
+          per_page: 50,
+          page: 2,
+          price_change_percentage: "7d",
+          sparkline: false,
+        },
+        timeout: 12000,
+      }),
+    ]);
+
+    // Skip top 10, take ranks 11–100
+    const midCaps = [...page1.data.slice(10), ...page2.data];
+
+    if (!midCaps.length) return "Mid-cap data unavailable";
+
+    // Sort by absolute 24h change to surface the biggest movers
+    const sorted = midCaps
+      .filter((c) => c.price_change_percentage_24h != null)
+      .sort((a, b) =>
+        Math.abs(b.price_change_percentage_24h) - Math.abs(a.price_change_percentage_24h)
+      )
+      .slice(0, 20);
+
+    return sorted
+      .map((c) => {
+        const change24 = fmt(c.price_change_percentage_24h ?? 0);
+        const change7d  = fmt(c.price_change_percentage_7d_in_currency ?? 0);
+        return (
+          `#${c.market_cap_rank} ${c.symbol.toUpperCase()} (${c.name}): ` +
+          `Price=${fmtPrice(c.current_price)} | ` +
+          `24h=${change24} | 7d=${change7d} | ` +
+          `Vol=${fmtVol(c.total_volume)}`
+        );
+      })
+      .join("\n");
+  } catch (err) {
+    console.warn("⚠️  CoinGecko mid-cap fetch failed:", (err as Error).message);
+    return "Mid-cap data unavailable (CoinGecko error)";
   }
 }
