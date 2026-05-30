@@ -4,11 +4,12 @@ const parser = new Parser({ timeout: 10000 });
 
 // Free RSS feeds — no API key needed
 const FEEDS = [
-  { name: "Cointelegraph",  url: "https://cointelegraph.com/rss" },
-  { name: "Decrypt",        url: "https://decrypt.co/feed" },
-  { name: "CryptoSlate",    url: "https://cryptoslate.com/feed/" },
-  { name: "CoinGape",       url: "https://coingape.com/feed/" },
-  { name: "AMBCrypto",      url: "https://ambcrypto.com/feed/" },
+  { name: "Cointelegraph", url: "https://cointelegraph.com/rss" },
+  { name: "Decrypt",       url: "https://decrypt.co/feed" },
+  { name: "BeInCrypto",    url: "https://beincrypto.com/feed/" },
+  { name: "CoinGape",      url: "https://coingape.com/feed/" },
+  { name: "AMBCrypto",     url: "https://ambcrypto.com/feed/" },
+  { name: "Blockworks",    url: "https://blockworks.co/feed" },
 ];
 
 interface NewsItem {
