@@ -1,20 +1,22 @@
 services:
   - type: worker
     name: daily-crypto-news-bot
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: CRYPTOPANIC_API_KEY
         sync: false
       - key: LUNARCRUSH_API_KEY
         sync: false
-      - key: APIFY_API_TOKEN
-        sync: false
-      - key: X_BEARER_TOKEN
+      - key: COINGECKO_API_KEY
         sync: false
       - key: TRACKED_COINS
-        value: BTC,ETH,SOL,BNB
+        value: BTC,ETH,SOL,HYPE
