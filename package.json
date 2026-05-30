@@ -1,0 +1,27 @@
+{
+  "name": "daily-crypto-news",
+  "version": "1.0.0",
+  "description": "Daily crypto news digest bot powered by Claude AI + Telegram",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "start:prod": "node dist/index.js",
+    "test": "ts-node src/index.ts --run-now"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.67.0",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.0",
+    "@types/node-telegram-bot-api": "^0.64.14",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.3.0"
+  }
+}
