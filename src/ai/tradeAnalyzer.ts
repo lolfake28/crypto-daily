@@ -88,6 +88,7 @@ Always use the real-time data provided before producing the setup. If the user s
 export async function generateTradeSetup(
   tech: TechnicalData,
   sentiment: string,
+  xSentiment: string,
   news: string,
   previousAnalysis?: string
 ): Promise<string> {
@@ -123,6 +124,9 @@ KEY LEVELS (from last 48 candles):
 
 SOCIAL SENTIMENT (LunarCrush):
 ${sentiment}
+
+X/TWITTER SENTIMENT (Apify):
+${xSentiment}
 
 RECENT NEWS:
 ${news}

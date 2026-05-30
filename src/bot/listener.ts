@@ -1,6 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { fetchTechnicalData } from "../fetchers/binance";
 import { fetchSocialSentiment } from "../fetchers/lunarcrush";
+import { fetchXSentiment } from "../fetchers/apify";
 import { fetchCryptoNews } from "../fetchers/cryptopanic";
 import { generateTradeSetup } from "../ai/tradeAnalyzer";
 
@@ -97,9 +98,10 @@ export function startCommandListener(
 
     try {
       // Fetch all data in parallel
-      const [tech, sentiment, news] = await Promise.all([
+      const [tech, sentiment, xSentiment, news] = await Promise.all([
         fetchTechnicalData(coin),
         fetchSocialSentiment([coin]),
+        fetchXSentiment([coin]),
         fetchCryptoNews(),
       ]);
 
@@ -113,7 +115,7 @@ export function startCommandListener(
       const previous = isReAnalyze ? lastSetup[coin] : undefined;
 
       console.log(`📊 Generating trade setup for ${coin}${previous ? " (with previous context)" : ""}...`);
-      const setup = await generateTradeSetup(tech, sentiment, coinNews, previous);
+      const setup = await generateTradeSetup(tech, sentiment, xSentiment, coinNews, previous);
 
       // Store as latest setup for this coin
       lastSetup[coin] = setup;
