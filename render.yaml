@@ -3,9 +3,6 @@ services:
     name: daily-crypto-news-bot
     runtime: docker
     dockerfilePath: ./Dockerfile
-    restartPolicy:
-      type: on_failure
-      maxRetries: 3
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
