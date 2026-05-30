@@ -124,7 +124,7 @@ export function startCommandListener(
       await bot.sendMessage(chatId, setup);
     } catch (err) {
       const msg403 = (err as Error).message?.includes("400")
-        ? `❌ *${coin}* is not listed on Binance (USDT pair not found). Try BTC, ETH, SOL, BNB, XRP, etc.`
+        ? `❌ *${coin}* USDT pair not found on Gate.io. Try BTC, ETH, SOL, BNB, XRP, TRX, ADA, DOGE, etc.`
         : `❌ Failed to analyze *${coin}*. Please try again.`;
       console.error(`❌ /analyze ${coin} error:`, err);
       bot.sendMessage(chatId, msg403, { parse_mode: "Markdown" });
