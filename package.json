@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
+    "dev": "pkill -f 'ts-node src/index' 2>/dev/null; sleep 1; ts-node src/index.ts",
     "build": "tsc",
     "start:prod": "node dist/index.js",
     "test": "ts-node src/index.ts --run-now"
