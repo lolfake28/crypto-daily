@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import axios, { AxiosError } from "axios";
 
 const parser = new Parser({ timeout: 10000 });
 
@@ -16,6 +17,42 @@ interface NewsItem {
   title: string;
   source: string;
   pubDate?: string;
+}
+
+interface CMCNewsItem {
+  title?: string;
+  source?: { name?: string };
+  publishedAt?: string;
+}
+
+export async function fetchCMCNews(symbol: string): Promise<string> {
+  const apiKey = process.env.CMC_API_KEY;
+  if (!apiKey) return "";
+
+  try {
+    const res = await axios.get<{ data: CMCNewsItem[] }>(
+      "https://api.coinmarketcap.com/v1/cryptocurrency/news",
+      {
+        params: { symbol: symbol.toUpperCase(), limit: 10 },
+        headers: { "X-CMC_PRO_API_KEY": apiKey },
+        timeout: 10000,
+      }
+    );
+
+    const items = res.data?.data ?? [];
+    if (!items.length) return "";
+
+    return items
+      .filter((item) => item.title)
+      .map((item) => `[CMC] ${item.title}`)
+      .join("\n");
+  } catch (err) {
+    const status = (err as AxiosError)?.response?.status;
+    const body = (err as AxiosError)?.response?.data;
+    console.warn(`⚠️  CMC news fetch failed for ${symbol} [HTTP ${status ?? "no-response"}]:`, (err as Error).message);
+    if (body) console.warn("    CMC error body:", JSON.stringify(body));
+    return "";
+  }
 }
 
 export async function fetchCryptoNews(): Promise<string> {

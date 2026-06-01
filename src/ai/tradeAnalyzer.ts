@@ -116,6 +116,7 @@ IMPORTANT RULES YOU MUST FOLLOW:
 3. RSI overbought (>70) alone is NOT enough to short — require MA confirmation too
 4. If volume is below 7-day average (decreasing), downgrade confidence by one level
 5. Always reference the news and sentiment data before finalizing bias
+6. Whale buys >$1M are a bullish institutional signal — reference them in the Institutional signal field and bias reasoning. Whale sells >$1M are a bearish signal. Multiple large buys in 24h can upgrade confidence by one level.
 
 Always use the real-time data provided. If re-analyzing, compare with previous setup and note what changed.`;
 
@@ -124,6 +125,7 @@ export async function generateTradeSetup(
   sentiment: string,
   xSentiment: string,
   news: string,
+  whaleActivity: string,
   previousAnalysis?: string
 ): Promise<string> {
   const now = new Date().toUTCString();
@@ -173,6 +175,9 @@ ${xSentiment}
 
 RECENT NEWS (last 72h):
 ${news}
+
+WHALE ACTIVITY (Arkham Intelligence, last 24h, >$1M):
+${whaleActivity}
 
 Output the full 6–12 hour swing trade setup in the exact format specified. Use the real numbers above.${previousAnalysis ? " Note what has changed since the previous analysis." : ""}`;
 

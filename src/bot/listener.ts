@@ -2,7 +2,9 @@ import TelegramBot from "node-telegram-bot-api";
 import { fetchTechnicalData } from "../fetchers/binance";
 import { fetchSocialSentiment } from "../fetchers/lunarcrush";
 import { fetchXSentiment } from "../fetchers/apify";
-import { fetchCryptoNews } from "../fetchers/cryptopanic";
+import { fetchCryptoNews, fetchCMCNews } from "../fetchers/cryptopanic";
+import { fetchAggregatedVolume } from "../fetchers/coingecko";
+import { fetchWhaleActivity } from "../fetchers/arkham";
 import { generateTradeSetup } from "../ai/tradeAnalyzer";
 
 const DIGEST_COOLDOWN_MS    = 5 * 60 * 1000;  // 5 min between /news calls
@@ -34,6 +36,17 @@ const HELP = `📖 *Available Commands:*
 /help — Show this menu
 
 _Example: /analyze BTC or /update ETH_`;
+
+function splitMessage(text: string, maxLen: number): string[] {
+  if (text.length <= maxLen) return [text];
+  const parts: string[] = [];
+  let remaining = text;
+  while (remaining.length > 0) {
+    parts.push(remaining.slice(0, maxLen));
+    remaining = remaining.slice(maxLen);
+  }
+  return parts;
+}
 
 export function startCommandListener(
   token: string,
@@ -98,30 +111,42 @@ export function startCommandListener(
 
     try {
       // Fetch all data in parallel
-      const [tech, sentiment, xSentiment, news] = await Promise.all([
+      const [tech, sentiment, xSentiment, news, cmcNews, aggVol, whales] = await Promise.all([
         fetchTechnicalData(coin),
         fetchSocialSentiment([coin]),
         fetchXSentiment([coin]),
         fetchCryptoNews(),
+        fetchCMCNews(coin),
+        fetchAggregatedVolume(coin),
+        fetchWhaleActivity(coin),
       ]);
 
-      // Filter news to only coin-relevant headlines
-      const coinNews = news
+      // Override Gate.io single-exchange volume with CoinGecko aggregated volume when available
+      if (aggVol) tech.volumeUSD = aggVol;
+
+      // Filter RSS news to coin-relevant headlines, then append CMC coin-specific news
+      const rssFiltered = news
         .split("\n")
         .filter((line) => line.toLowerCase().includes(coin.toLowerCase()))
         .slice(0, 5)
-        .join("\n") || "No specific news found for this coin in the last 24h.";
+        .join("\n");
+
+      const coinNews = [rssFiltered, cmcNews].filter(Boolean).join("\n")
+        || "No specific news found for this coin in the last 24h.";
 
       const previous = isReAnalyze ? lastSetup[coin] : undefined;
 
       console.log(`📊 Generating trade setup for ${coin}${previous ? " (with previous context)" : ""}...`);
-      const setup = await generateTradeSetup(tech, sentiment, xSentiment, coinNews, previous);
+      const setup = await generateTradeSetup(tech, sentiment, xSentiment, coinNews, whales, previous);
 
       // Store as latest setup for this coin
       lastSetup[coin] = setup;
 
-      // Send as plain text (no parse_mode) to preserve the exact format
-      await bot.sendMessage(chatId, setup);
+      // Send as plain text, split into ≤4096-char chunks to stay within Telegram's limit
+      const chunks = splitMessage(setup, 4096);
+      for (const chunk of chunks) {
+        await bot.sendMessage(chatId, chunk);
+      }
     } catch (err) {
       const msg403 = (err as Error).message?.includes("400")
         ? `❌ *${coin}* USDT pair not found on Gate.io. Try BTC, ETH, SOL, BNB, XRP, TRX, ADA, DOGE, etc.`

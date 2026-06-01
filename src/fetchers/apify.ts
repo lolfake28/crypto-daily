@@ -118,11 +118,14 @@ export async function fetchXSentiment(coins: string[]): Promise<string> {
       .join("\n");
 
   } catch (err) {
-    const status = (err as AxiosError)?.response?.status;
+    const axiosErr = err as AxiosError;
+    const status = axiosErr?.response?.status;
+    const body = axiosErr?.response?.data;
     if (status === 401) {
       return "X/Twitter data unavailable (invalid Apify token)";
     }
-    console.warn("⚠️  Apify X fetch failed:", (err as Error).message);
+    console.warn(`⚠️  Apify X fetch failed [HTTP ${status ?? "no-response"}]:`, (err as Error).message);
+    if (body) console.warn("    Apify error body:", JSON.stringify(body));
     return "X/Twitter data unavailable (Apify scraper error)";
   }
 }

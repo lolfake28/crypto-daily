@@ -20,6 +20,31 @@ const COIN_ID_MAP: Record<string, string> = {
   ATOM:  "cosmos",
   LTC:   "litecoin",
   TRX:   "tron",
+  WLD:   "worldcoin-wld",
+  ENA:   "ethena",
+  SUI:   "sui",
+  APT:   "aptos",
+  ARB:   "arbitrum",
+  OP:    "optimism",
+  NEAR:  "near",
+  INJ:   "injective-protocol",
+  AAVE:  "aave",
+  CRV:   "curve-dao-token",
+  LDO:   "lido-dao",
+  STX:   "blockstack",
+  AXS:   "axie-infinity",
+  APE:   "apecoin",
+  GMX:   "gmx",
+  RUNE:  "thorchain",
+  FTM:   "fantom",
+  ICP:   "internet-computer",
+  HBAR:  "hedera-hashgraph",
+  GRT:   "the-graph",
+  SNX:   "havven",
+  COMP:  "compound-governance-token",
+  YFI:   "yearn-finance",
+  SUSHI: "sushi",
+  CAKE:  "pancakeswap-token",
 };
 
 interface CoinMarket {
@@ -150,5 +175,28 @@ export async function fetchMidCapData(): Promise<string> {
   } catch (err) {
     console.warn("⚠️  CoinGecko mid-cap fetch failed:", (err as Error).message);
     return "Mid-cap data unavailable (CoinGecko error)";
+  }
+}
+
+interface CoinDetail {
+  market_data: {
+    total_volume: { usd: number };
+  };
+}
+
+// Returns aggregated 24h volume across all exchanges, or null if coin not in map
+export async function fetchAggregatedVolume(symbol: string): Promise<number | null> {
+  const coinId = COIN_ID_MAP[symbol.toUpperCase()];
+  if (!coinId) return null;
+
+  try {
+    const res = await axios.get<CoinDetail>(`${COINGECKO_BASE}/coins/${coinId}`, {
+      params: { localization: false, tickers: false, community_data: false, developer_data: false },
+      timeout: 10000,
+    });
+    return res.data.market_data.total_volume.usd ?? null;
+  } catch (err) {
+    console.warn(`⚠️  CoinGecko aggregated volume fetch failed for ${symbol}:`, (err as Error).message);
+    return null;
   }
 }
